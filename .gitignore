@@ -1,2 +1,3 @@
 task
+src/libtask.[ao]
 src/libtask.so

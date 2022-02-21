@@ -3,15 +3,23 @@
 CFLAGS = -ansi -pipe -O3 -Wall -Wextra -Wmissing-prototypes -Wstrict-prototypes -pedantic
 PREFIX = /usr
 
-all: libtask.so
+sources = libtask.o task.h
+outputs = libtask.so libtask.a
 
-libtask.so: libtask.c task.h
-	${CC} ${CFLAGS} -o $@ -fPIC -shared libtask.c
+all: ${outputs}
+
+libtask.o: libtask.c
+
+libtask.a: ${sources}
+	${AR} ${ARFLAGS} $@ libtask.o
+
+libtask.so: ${sources}
+	${CC} ${CFLAGS} -o $@ -fPIC -shared libtask.o
 
 install:
-	mkdir -p ${PREFIX}/{include,lib}
-	cp libtask.so ${PREFIX}/lib
+	mkdir -p ${PREFIX}/include ${PREFIX}/lib
+	cp ${outputs} ${PREFIX}/lib
 	cp task.h ${PREFIX}/include
 
 clean:
-	rm libtask.so
+	rm -f ${outputs} libtask.o
