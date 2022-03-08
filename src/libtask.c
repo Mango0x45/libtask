@@ -19,7 +19,6 @@
 #define _XOPEN_SOURCE
 
 #include <ctype.h>
-#include <err.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
