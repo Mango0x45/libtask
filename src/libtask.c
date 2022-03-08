@@ -42,12 +42,12 @@ static int parsetitle(char *s, struct task *tsk);
 static int parseauthor(char *s, struct task *tsk);
 static int parsetframe(char *s, struct task *tsk);
 static int appendbody(char *s, ssize_t len, struct task *tsk);
-static void writetime(FILE *fp, struct tm t);
+static void timewrite(FILE *fp, struct tm t);
 static bool timenull(struct tm t1);
 static size_t max(size_t a, size_t b);
 
 int
-writetask(FILE *fp, struct task tsk)
+taskwrite(FILE *fp, struct task tsk)
 {
 	char **p;
 	size_t i, len, mx = 0;
@@ -78,18 +78,18 @@ writetask(FILE *fp, struct task tsk)
 
 	if (timenull(tsk.start)) {
 		fputs("Until ", fp);
-		writetime(fp, tsk.start);
+		timewrite(fp, tsk.start);
 	} else if (timenull(tsk.end)) {
 		fputs("After ", fp);
-		writetime(fp, tsk.end);
+		timewrite(fp, tsk.end);
 	} else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0) {
 		fputs("On ", fp);
-		writetime(fp, tsk.start);
+		timewrite(fp, tsk.start);
 	} else {
 		fputs("From ", fp);
-		writetime(fp, tsk.start);
+		timewrite(fp, tsk.start);
 		fputs(" to ", fp);
-		writetime(fp, tsk.end);
+		timewrite(fp, tsk.end);
 	}
 
 	fputc('\n', fp);
@@ -103,7 +103,7 @@ writetask(FILE *fp, struct task tsk)
 }
 
 int
-readtask(FILE *fp, struct task *tsk)
+taskread(FILE *fp, struct task *tsk)
 {
 	int err, lineno = 0;
 	bool inhead = true;
@@ -280,7 +280,7 @@ timenull(struct tm t1)
 }
 
 void
-writetime(FILE *fp, struct tm t)
+timewrite(FILE *fp, struct tm t)
 {
 	fprintf(fp, "%02d:%02d %04d-%02d-%02d", t.tm_hour, t.tm_min, t.tm_year + 1900, t.tm_mon + 1,
 		t.tm_mday);
