@@ -67,10 +67,10 @@ taskwrite(FILE *fp, struct task tsk)
 	for (p = tsk.authors; *p; p++)
 		mx = max(mx, strlen(*p));
 
-	if (timenull(tsk.start)) {
+	if (timenull(tsk.end)) {
 		tt = AFTER;
 		mx = max(mx, tslen + aupad);
-	} else if (timenull(tsk.end)) {
+	} else if (timenull(tsk.start)) {
 		tt = UNTIL;
 		mx = max(mx, tslen + aupad);
 	} else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0) {
