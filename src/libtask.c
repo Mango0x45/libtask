@@ -50,6 +50,7 @@ int
 taskwrite(FILE *fp, struct task tsk)
 {
 	char **p;
+	bool sn, en;
 	size_t i, len, mx = 0;
 	const int tgpad = 13; /* strlen("Time Frame:  ")              */
 	const int ftpad = 9;  /* strlen("From  to ")                  */
@@ -63,23 +64,27 @@ taskwrite(FILE *fp, struct task tsk)
 		UNTIL
 	} tt;
 
+	if ((sn = timenull(tsk.start)) && (en = timenull(tsk.end)))
+		return EINVAL;
+
 	mx = strlen(tsk.title);
 	for (p = tsk.authors; *p; p++)
 		mx = max(mx, strlen(*p));
 
-	if (timenull(tsk.end)) {
+	if (en) {
 		tt = AFTER;
 		mx = max(mx, tslen + aupad);
-	} else if (timenull(tsk.start)) {
+	} else if (sn) {
 		tt = UNTIL;
 		mx = max(mx, tslen + aupad);
 	} else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0) {
 		tt = ON;
 		mx = max(mx, tslen + onpad);
-	} else {
+	} else if (mktime(&tsk.start) < mktime(&tsk.end)) {
 		tt = FROM_TO;
 		mx = max(mx, 2 * tslen + ftpad);
-	}
+	} else
+		return EINVAL;
 
 	len = tgpad + mx;
 	for (i = 0; i < len; i++)
