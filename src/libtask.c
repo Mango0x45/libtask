@@ -41,6 +41,7 @@ static int parsetitle(char *s, struct task *tsk);
 static int parseauthor(char *s, struct task *tsk);
 static int parsetframe(char *s, struct task *tsk);
 static int appendbody(char *s, ssize_t len, struct task *tsk);
+static int timecmp(struct tm t1, struct tm t2);
 static bool timenull(struct tm t1);
 static void timewrite(FILE *fp, struct tm t);
 static size_t max(size_t a, size_t b);
@@ -48,6 +49,7 @@ static size_t max(size_t a, size_t b);
 int
 taskwrite(FILE *fp, struct task tsk)
 {
+	int cmp;
 	char **p;
 	bool sn, en;
 	size_t i, len, mx = 0;
@@ -78,10 +80,10 @@ taskwrite(FILE *fp, struct task tsk)
 	} else if (sn) {
 		tt = UNTIL;
 		mx = max(mx, tslen + aupad);
-	} else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0) {
+	} else if ((cmp = timecmp(tsk.start, tsk.end)) == 0) {
 		tt = ON;
 		mx = max(mx, tslen + onpad);
-	} else if (mktime(&tsk.start) < mktime(&tsk.end)) {
+	} else if (cmp < 0) {
 		tt = FROM_TO;
 		mx = max(mx, 2 * tslen + ftpad);
 	} else
@@ -269,6 +271,8 @@ parsetframe(char *s, struct task *tsk)
 			return EBADMSG;
 		if ((s = strptime(s, "%H:%M %Y-%m-%d", &tsk->end)) == NULL)
 			return EBADMSG;
+		if (timecmp(tsk->start, tsk->end) >= 0)
+			return EBADMSG;
 	} else
 		return EBADMSG;
 
@@ -292,6 +296,20 @@ appendbody(char *s, ssize_t len, struct task *tsk)
 
 	strcat(tsk->body, s);
 	return EOK;
+}
+
+int
+timecmp(struct tm t1, struct tm t2)
+{
+	return t1.tm_year < t2.tm_year ? -1 :
+	       t1.tm_year > t2.tm_year ? +1 :
+	       t1.tm_mon  < t2.tm_mon  ? -1 :
+	       t1.tm_mon  > t2.tm_mon  ? +1 :
+	       t1.tm_mday < t2.tm_mday ? -1 :
+	       t1.tm_mday > t2.tm_mday ? +1 :
+	       t1.tm_hour < t2.tm_hour ? -1 :
+	       t1.tm_hour > t2.tm_hour ? +1 :
+	       t1.tm_min  - t2.tm_min;
 }
 
 bool
