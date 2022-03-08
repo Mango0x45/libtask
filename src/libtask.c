@@ -31,10 +31,10 @@
 
 #define EOK 0
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
-#define SKPSPC(s)				\
-	do {					\
-		while (isspace(*s))		\
-			s++;			\
+#define SKPSPC(s)                                                                                  \
+	do {                                                                                       \
+		while (isspace(*s))                                                                \
+			s++;                                                                       \
 	} while (0)
 
 static bool header(char *s);
@@ -102,10 +102,10 @@ header(char *s)
 int
 parsehead(char *s, struct task *tsk)
 {
-	return strncmp(s, "Title:", 6) == 0 ? parsetitle(s + 6, tsk)
-		: strncmp(s, "Author:", 7) == 0 ? parseauthor(s + 7, tsk)
-		: strncmp(s, "Time Frame:", 11) == 0 ? parsetframe(s + 11, tsk)
-		: EBADMSG;
+	return strncmp(s, "Title:", 6)       == 0 ? parsetitle(s + 6, tsk)   :
+	       strncmp(s, "Author:", 7)      == 0 ? parseauthor(s + 7, tsk)  :
+	       strncmp(s, "Time Frame:", 11) == 0 ? parsetframe(s + 11, tsk) :
+						    EBADMSG;
 }
 
 int
@@ -156,8 +156,8 @@ parseauthor(char *s, struct task *tsk)
 		int oaucap = tsk->_author_cap;
 
 		tsk->_author_cap *= 2;
-		if ((tsk->authors = realloc(tsk->authors,
-					    sizeof(char *) * tsk->_author_cap + 1)) == NULL)
+		if ((tsk->authors = realloc(tsk->authors, sizeof(char *) * tsk->_author_cap + 1))
+				== NULL)
 			return errno;
 		memset(tsk->authors + oaucap, 0, tsk->_author_cap - oaucap);
 	}
