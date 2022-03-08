@@ -30,7 +30,6 @@
 #include "task.h"
 
 #define EOK 0
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define SKPSPC(s)                                                                                  \
 	do {                                                                                       \
 		while (isspace(*s))                                                                \
@@ -43,6 +42,65 @@ static int parsetitle(char *s, struct task *tsk);
 static int parseauthor(char *s, struct task *tsk);
 static int parsetframe(char *s, struct task *tsk);
 static int appendbody(char *s, ssize_t len, struct task *tsk);
+static void writetime(FILE *fp, struct tm t);
+static bool timenull(struct tm t1);
+static size_t max(size_t a, size_t b);
+
+int
+writetask(FILE *fp, struct task tsk)
+{
+	char **p;
+	size_t i, len, mx = 0;
+	const int tgpad = 13; /* strlen("Time Frame:  ")              */
+	const int ftpad = 9;  /* strlen("From  to ")                  */
+	const int aupad = 6;  /* strlen("After ") || strlen("Until ") */
+	const int onpad = 3;  /* strlen("On ")                        */
+	const int tslen = 16; /* strlen("HH:MM YYYY-MM-DD")           */
+
+	mx = strlen(tsk.title);
+	for (p = tsk.authors; *p; p++)
+		mx = max(mx, strlen(*p));
+	if (timenull(tsk.start) || timenull(tsk.end))
+		mx = max(mx, tslen + aupad);
+	else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0)
+		mx = max(mx, tslen + onpad);
+	else
+		mx = max(mx, 2 * tslen + ftpad);
+
+	len = tgpad + mx;
+	for (i = 0; i < len; i++)
+		fputc('-', fp);
+	fputc('\n', fp);
+	fprintf(fp, "Title:       %s\n", tsk.title);
+	for (p = tsk.authors; *p; p++)
+		fprintf(fp, "Author:      %s\n", *p);
+	fprintf(fp, "Time Frame:  ");
+
+	if (timenull(tsk.start)) {
+		fputs("Until ", fp);
+		writetime(fp, tsk.start);
+	} else if (timenull(tsk.end)) {
+		fputs("After ", fp);
+		writetime(fp, tsk.end);
+	} else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0) {
+		fputs("On ", fp);
+		writetime(fp, tsk.start);
+	} else {
+		fputs("From ", fp);
+		writetime(fp, tsk.start);
+		fputs(" to ", fp);
+		writetime(fp, tsk.end);
+	}
+
+	fputc('\n', fp);
+
+	for (i = 0; i < len; i++)
+		fputc('-', fp);
+	fputs("\n\n", fp);
+	fputs(tsk.body, fp);
+
+	return EOK;
+}
 
 int
 readtask(FILE *fp, struct task *tsk)
@@ -200,7 +258,7 @@ int
 appendbody(char *s, ssize_t len, struct task *tsk)
 {
 	if (tsk->body == NULL) {
-		tsk->_body_cap = MAX(256, len);
+		tsk->_body_cap = max(256, len);
 		if ((tsk->body = malloc(tsk->_body_cap + 1)) == NULL)
 			return errno;
 	}
@@ -212,4 +270,24 @@ appendbody(char *s, ssize_t len, struct task *tsk)
 
 	strcat(tsk->body, s);
 	return EOK;
+}
+
+bool
+timenull(struct tm t1)
+{
+	struct tm t2 = {0};
+	return memcmp(&t1, &t2, sizeof(struct tm)) == 0;
+}
+
+void
+writetime(FILE *fp, struct tm t)
+{
+	fprintf(fp, "%02d:%02d %04d-%02d-%02d", t.tm_hour, t.tm_min, t.tm_year + 1900, t.tm_mon + 1,
+		t.tm_mday);
+}
+
+size_t
+max(size_t a, size_t b)
+{
+	return a > b ? a : b;
 }

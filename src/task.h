@@ -29,6 +29,7 @@ struct task {
 	struct tm start, end;
 };
 
+int writetask(FILE *fp, struct task tsk);
 int readtask(FILE *fp, struct task *tsk);
 
 #endif /* !TASK_H */
