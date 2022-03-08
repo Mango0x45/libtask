@@ -65,7 +65,7 @@ readtask(FILE *fp, struct task *tsk)
 		if ((err = appendbody(line, nr, tsk)) != EOK)
 			return err;
 	}
-	
+
 	if (nr == -1)
 		return errno;
 
@@ -92,21 +92,21 @@ parsehead(char *s, struct task *tsk)
 }
 
 int
-parsetitle(char *s, struct task *tsk)    
+parsetitle(char *s, struct task *tsk)
 {
 	size_t len;
-	
+
 	SKPSPC(s);
 	len = strlen(s);
 	if ((tsk->title = malloc(sizeof(char) * len + 1)) == NULL)
 		return errno;
 	strcpy(tsk->title, s);
-	
+
 	return EOK;
 }
 
 int
-parseauthor(char *s, struct task *tsk)    
+parseauthor(char *s, struct task *tsk)
 {
 	bool inspc = false;
 	size_t len;
@@ -137,7 +137,7 @@ parseauthor(char *s, struct task *tsk)
 		tsk->authors[1] = NULL;
 	} else if (tsk->_author_cap == tsk->author_cnt) {
 		int oaucap = tsk->_author_cap;
-		
+
 		tsk->_author_cap *= 2;
 		if ((tsk->authors = realloc(tsk->authors,
 					    sizeof(char *) * tsk->_author_cap + 1)) == NULL)
@@ -148,12 +148,12 @@ parseauthor(char *s, struct task *tsk)
 	if ((tsk->authors[tsk->author_cnt] = malloc(sizeof(char) * len + 1)) == NULL)
 		return errno;
 	strcpy(tsk->authors[tsk->author_cnt++], s);
-	
+
 	return EOK;
 }
 
 int
-parsetframe(char *s, struct task *tsk)    
+parsetframe(char *s, struct task *tsk)
 {
 	SKPSPC(s);
 
@@ -174,7 +174,7 @@ parsetframe(char *s, struct task *tsk)
 			return EBADMSG;
 	} else
 		return EBADMSG;
-	
+
 	SKPSPC(s);
 	return *s == '\0' ? EOK : EBADMSG;
 }
