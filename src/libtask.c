@@ -63,7 +63,9 @@ taskwrite(FILE *fp, struct task tsk)
 		UNTIL
 	} tt;
 
-	if ((sn = timenull(tsk.start)) && (en = timenull(tsk.end)))
+	sn = timenull(tsk.start);
+	en = timenull(tsk.end);
+	if (sn && en)
 		return EINVAL;
 
 	mx = strlen(tsk.title);
