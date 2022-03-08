@@ -97,7 +97,7 @@ taskwrite(FILE *fp, struct task tsk)
 	switch (tt) {
 	case AFTER:
 		fputs("Time Frame:  After ", fp);
-		timewrite(fp, tsk.end);
+		timewrite(fp, tsk.start);
 		break;
 	case FROM_TO:
 		fputs("Time Frame:  From ", fp);
@@ -111,7 +111,7 @@ taskwrite(FILE *fp, struct task tsk)
 		break;
 	case UNTIL:
 		fputs("Time Frame:  Until ", fp);
-		timewrite(fp, tsk.start);
+		timewrite(fp, tsk.end);
 	}
 
 	fputc('\n', fp);
