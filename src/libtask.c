@@ -56,48 +56,64 @@ taskwrite(FILE *fp, struct task tsk)
 	const int aupad = 6;  /* strlen("After ") || strlen("Until ") */
 	const int onpad = 3;  /* strlen("On ")                        */
 	const int tslen = 16; /* strlen("HH:MM YYYY-MM-DD")           */
+	enum timetype {
+		AFTER,
+		FROM_TO,
+		ON,
+		UNTIL
+	} tt;
 
 	mx = strlen(tsk.title);
 	for (p = tsk.authors; *p; p++)
 		mx = max(mx, strlen(*p));
-	if (timenull(tsk.start) || timenull(tsk.end))
+
+	if (timenull(tsk.start)) {
+		tt = AFTER;
 		mx = max(mx, tslen + aupad);
-	else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0)
+	} else if (timenull(tsk.end)) {
+		tt = UNTIL;
+		mx = max(mx, tslen + aupad);
+	} else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0) {
+		tt = ON;
 		mx = max(mx, tslen + onpad);
-	else
+	} else {
+		tt = FROM_TO;
 		mx = max(mx, 2 * tslen + ftpad);
+	}
 
 	len = tgpad + mx;
 	for (i = 0; i < len; i++)
 		fputc('-', fp);
 	fputc('\n', fp);
+
 	fprintf(fp, "Title:       %s\n", tsk.title);
 	for (p = tsk.authors; *p; p++)
 		fprintf(fp, "Author:      %s\n", *p);
-	fprintf(fp, "Time Frame:  ");
 
-	if (timenull(tsk.start)) {
-		fputs("Until ", fp);
-		timewrite(fp, tsk.start);
-	} else if (timenull(tsk.end)) {
-		fputs("After ", fp);
+	switch (tt) {
+	case AFTER:
+		fputs("Time Frame:  After ", fp);
 		timewrite(fp, tsk.end);
-	} else if (memcmp(&tsk.start, &tsk.end, sizeof(struct tm)) == 0) {
-		fputs("On ", fp);
-		timewrite(fp, tsk.start);
-	} else {
-		fputs("From ", fp);
+		break;
+	case FROM_TO:
+		fputs("Time Frame:  From ", fp);
 		timewrite(fp, tsk.start);
 		fputs(" to ", fp);
 		timewrite(fp, tsk.end);
+		break;
+	case ON:
+		fputs("Time Frame:  On ", fp);
+		timewrite(fp, tsk.start);
+		break;
+	case UNTIL:
+		fputs("Time Frame:  Until ", fp);
+		timewrite(fp, tsk.start);
 	}
 
 	fputc('\n', fp);
-
 	for (i = 0; i < len; i++)
 		fputc('-', fp);
-	fputs("\n\n", fp);
-	fputs(tsk.body, fp);
+	fprintf(fp, "\n\n%s", tsk.body);
 
 	return EOK;
 }
