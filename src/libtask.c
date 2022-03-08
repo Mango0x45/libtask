@@ -42,8 +42,8 @@ static int parsetitle(char *s, struct task *tsk);
 static int parseauthor(char *s, struct task *tsk);
 static int parsetframe(char *s, struct task *tsk);
 static int appendbody(char *s, ssize_t len, struct task *tsk);
-static void timewrite(FILE *fp, struct tm t);
 static bool timenull(struct tm t1);
+static void timewrite(FILE *fp, struct tm t);
 static size_t max(size_t a, size_t b);
 
 int
