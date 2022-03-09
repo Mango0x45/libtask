@@ -134,7 +134,7 @@ taskwrite(FILE *stream, struct task task)
 int
 taskread(FILE *stream, struct task *task)
 {
-	int err, lineno = 0;
+	int rval = EOK, lineno = 0;
 	bool inhead = true;
 	char *line = NULL;
 	size_t len = 0;
@@ -144,37 +144,43 @@ taskread(FILE *stream, struct task *task)
 
 	while ((nr = getline(&line, &len, stream)) > 0) {
 		line[nr - 1] = '\0';
-		if (lineno == 0 && !header(line))
-			return EBADMSG;
-		else if (lineno > 0) {
+		if (lineno == 0 && !header(line)) {
+			rval = EBADMSG;
+			goto out;
+		} else if (lineno > 0) {
 			if (header(line)) {
-				if (task->title == NULL)
-					return EBADMSG;
+				if (task->title == NULL) {
+					rval = EBADMSG;
+					goto out;
+				}
 				inhead = false;
 			} else if (!inhead) {
-				if (*line != '\0')
-					return EBADMSG;
+				if (*line != '\0') {
+					rval = EBADMSG;
+					goto out;
+				}
 				break;
-			} else if (inhead && (err = parsehead(line, task)) != EOK)
-				return err;
+			} else if (inhead && (rval = parsehead(line, task)) != EOK)
+				goto out;
 		}
 
 		lineno++;
 	}
-
-	if (nr == -1)
-		return errno;
-
-	while ((nr = getline(&line, &len, stream)) > 0) {
-		if ((err = appendbody(line, nr, task)) != EOK)
-			return err;
+	if (nr == -1) {
+		rval = errno;
+		goto out;
 	}
 
+	while ((nr = getline(&line, &len, stream)) > 0) {
+		if ((rval = appendbody(line, nr, task)) != EOK)
+			goto out;
+	}
 	if (nr == -1)
-		return errno;
+		rval = errno;
 
+out:
 	free(line);
-	return EOK;
+	return rval;
 }
 
 bool
