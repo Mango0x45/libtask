@@ -1,0 +1,113 @@
+.\"
+.\" BSD Zero Clause License
+.\"
+.\" Copyright (c) 2022 Thomas Voss
+.\"
+.\" Permission to use, copy, modify, and/or distribute this software for any
+.\" purpose with or without fee is hereby granted.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+.\" OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: March 9 2022 $
+.Dt TASKWRITE 3
+.Os
+.Sh NAME
+.Nm taskwrite
+.Nd write a properly formatted task to an output stream
+.Sh SYNOPSIS
+.In task.h
+.Ft int
+.Fo taskwrite
+.Fa "FILE *stream"
+.Fa "struct task task"
+.Fc
+.Sh DESCRIPTION
+The
+.Fn taskwrite
+function writes the contents of
+.Fa task
+to the output stream
+.Fa stream
+in the format specified by
+.Xr task 5 .
+.Pp
+For details on the structure of the
+.Vt struct task
+structure, see the
+.Xr taskread 3
+manual.
+The
+.Fn taskwrite
+function does not validate the timestamps embedded within
+.Fa task .
+This means that you could in theory write a task for the 32nd of the 13th month.
+The output stream specified by
+.Fa stream
+is also not
+.Dv NULL
+checked, so the caller should ensure that a
+.Dv NULL
+value is not passed, otherwise the function will most likely cause a segmentation fault.
+.Sh RETURN VALUES
+Upon successful completion 0 is returned.
+Otherwise, an error constant specified in
+.Pa errno.h
+is returned.
+.Sh EXAMPLES
+The following code builds a task and writes it to the standard output without performing error
+checking.
+.Bd -literal -offset indent
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include <task.h>
+
+int
+main(void)
+{
+	char *authors[] = { "Thomas Voss", NULL }; /* Must be NULL terminated! */
+	time_t tm = time(NULL);
+	struct task task = {
+		.title = "Write the taskwrite(3) manual page",
+		.authors = authors,
+		.body = "The taskwrite(3) manual page needs writing.\en"
+			"The mandoc documentation will prove useful.\en",
+		.start = *gmtime(&tm)
+	};
+	taskwrite(stdout, task);
+	return EXIT_SUCCESS;
+}
+.Ed
+.Pp
+The output after executing the above program is as follows:
+.Bd -literal -offset indent
+-----------------------------------------------
+Title:       Write the taskwrite(3) manual page
+Author:      Thomas Voss
+Time Frame:  After 00:43 2022-03-09
+-----------------------------------------------
+
+The taskwrite(3) manual page needs writing.
+The mandoc documentation will prove useful.
+.Ed
+.Sh ERRORS
+.Bl -tag -width Er
+.It Bq Er EINVAL
+The
+.Vt struct task
+passed to the function is of the form
+.Dq From XX to YY ,
+but the ending timestamp represents a time earlier than the starting timestamp.
+.El
+.Sh SEE ALSO
+.Xr taskread 3 ,
+.Xr task 5
+.Sh AUTHORS
+.An Thomas Voss Aq Mt thomasvoss@live.com
