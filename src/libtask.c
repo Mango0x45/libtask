@@ -296,7 +296,7 @@ appendbody(char *s, ssize_t len, struct task *tsk)
 {
 	if (tsk->body == NULL) {
 		tsk->_body_cap = max(256, len);
-		if ((tsk->body = malloc(tsk->_body_cap + 1)) == NULL)
+		if ((tsk->body = calloc(tsk->_body_cap + 1, sizeof(char))) == NULL)
 			return errno;
 	}
 	while (tsk->body_len + len > tsk->_body_cap) {
