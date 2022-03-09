@@ -46,6 +46,17 @@ static bool timenull(struct tm t1);
 static void timewrite(FILE *fp, struct tm t);
 static size_t max(size_t a, size_t b);
 
+void
+taskfree(struct task *task)
+{
+	char **p;
+	free(task->title);
+	free(task->body);
+	for (p = task->authors; *p; p++)
+		free(*p);
+	free(task->authors);
+}
+
 int
 taskwrite(FILE *stream, struct task task)
 {
