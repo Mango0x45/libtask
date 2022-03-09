@@ -1,0 +1,141 @@
+.\"
+.\" BSD Zero Clause License
+.\"
+.\" Copyright (c) 2022 Thomas Voss
+.\"
+.\" Permission to use, copy, modify, and/or distribute this software for any
+.\" purpose with or without fee is hereby granted.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+.\" OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: March 9 2022 $
+.Dt TASK 5
+.Os
+.Sh NAME
+.Nm task
+.Nd the task file format specification
+.Sh DESCRIPTION
+The task file format is a format designed for saving tasks, activies, or related events that have set
+timeframes involved.
+For example, perhaps a university assignment must be completed before a certain deadline, or the
+trash needs to be taken out between two timeframes.
+.Pp
+The format is designed to be extremely simple to use, and relatively easy for machines to parse.
+All task files are composed of a mandatory header and an optional body seperated by a newline.
+For an example of a complete file, see the
+.Sx EXAMPLES
+section of the manual.
+.Ss FILE HEADER
+The file header is a mandatory part of any task file.
+It is prefixed and suffixed by a horizontal rule, and contains metadata fields in the form
+.Dq Field: Data .
+Any amount of whitespace is allowed after the colon, but no whitespace is allow before it or at the
+start of the line.
+The horizontal rules are nothing more than a sequence of
+.Sq \-
+characters.
+The amount does not matter so long as there is no other character on the same line
+.Pq with the exception of the trailing newline .
+The format specifies the following metadata fields that can be contained in the header:
+.Pp
+.Bl -dash -compact
+.It
+Title
+.It
+Author
+.It
+Time Frame
+.El
+.Pp
+Of these fields, the
+.Dq Title
+and
+.Dq Time Frame
+are both required while the author field is optional.
+Additionally, the
+.Dq Author
+field may be specified multiple times to specify multiple authors.
+The field names are case sensitive, so having the line
+.Dq author: Thomas Voss
+is a violation of the format, but
+.Dq Author: Thomas Voss
+is completely valid.
+.Pp
+The formats of the data given to the
+.Dq Title
+and
+.Dq Author
+fields are completely up to the user and not specified.
+The
+.Dq Time Frame
+field however follows a very strict format.
+All time frames must have one of the following formats:
+.Pp
+.Bl -dash -compact
+.It
+After HH:MM YYYY\-MM\-DD
+.It
+Until HH:MM YYYY\-MM\-DD
+.It
+On HH:MM YYYY\-MM\-DD
+.It
+From HH:MM YYYY\-MM\-DD to HH:MM YYYY\-MM\-DD
+.El
+.Pp
+In the pattern
+.Dq HH:MM ,
+.Dq HH
+represents a 2 digit hour in the range 00\-23 and
+.Dq MM
+represents a 2 digit minute in the range 00\-59.
+Similarly, in the pattern
+.Dq YYYY\-MM\-DD ,
+.Dq YYYY
+represents a 4 digit year in the range 0000\-9999,
+.Dq MM
+represents a 2 digit month in the range 01\-12, and
+.Dq DD
+represents a 2 digit day in the range 01\-31.
+It is also required that when the time frame is of the form
+.Dq From ... to ...
+that the first time frame specified comes chronologicaly before the second specified time frame.
+.Ss FILE BODY
+The file body has no restrictions.
+It is completely optional, but if a task does have a body then there must be a single empty line
+between the body and the lower horizontal rule of the header.
+If there are multiple empty lines between the header and the body, then all but the first empty line
+should be considered a part of the body.
+.Sh EXAMPLES
+This is an example of a task file containing only a header and no body.
+.Bd -literal -offset indent
+-------------------------------------
+Title:       Study for Linear Algebra
+Time Frame:  Before 13:30 2022-03-08
+-------------------------------------
+.Ed
+.Pp
+This is an example of a complete task.
+.Bd -literal -offset indent
+------------------------------------------------------
+Title:       Create an OOPP Merge Request
+Author:      Thomas Voss
+Author:      Andy Zaidman
+Time Frame:  From 07:00 2022-02-05 to 21:35 2022-03-09
+------------------------------------------------------
+
+Within the time frame I must create a merge request and get it approved by at the
+very least, 2 team members. The merge request must also introduce a new endpoint
+to the server.
+.Ed
+.Sh SEE ALSO
+.Xr taskfree 3 ,
+.Xr taskread 3 ,
+.Xr taskwrite 3
+.Sh AUTHORS
+.An Thomas Voss Aq Mt thomasvoss@live.com
