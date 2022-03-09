@@ -29,7 +29,7 @@ struct task {
 	struct tm start, end;
 };
 
-int taskwrite(FILE *fp, struct task tsk);
-int taskread(FILE *fp, struct task *tsk);
+int taskwrite(FILE *stream, struct task task);
+int taskread(FILE *stream, struct task *task);
 
 #endif /* !TASK_H */

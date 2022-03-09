@@ -47,7 +47,7 @@ static void timewrite(FILE *fp, struct tm t);
 static size_t max(size_t a, size_t b);
 
 int
-taskwrite(FILE *fp, struct task tsk)
+taskwrite(FILE *stream, struct task task)
 {
 	int cmp;
 	char **p;
@@ -64,17 +64,17 @@ taskwrite(FILE *fp, struct task tsk)
 		UNTIL
 	} tt;
 
-	mx = strlen(tsk.title);
-	for (p = tsk.authors; *p; p++)
+	mx = strlen(task.title);
+	for (p = task.authors; *p; p++)
 		mx = max(mx, strlen(*p));
 
-	if ((cmp = timecmp(tsk.start, tsk.end)) == 0) {
+	if ((cmp = timecmp(task.start, task.end)) == 0) {
 		tt = ON;
 		mx = max(mx, tslen + onpad);
-	} else if (timenull(tsk.end)) {
+	} else if (timenull(task.end)) {
 		tt = AFTER;
 		mx = max(mx, tslen + aupad);
-	} else if (timenull(tsk.start)) {
+	} else if (timenull(task.start)) {
 		tt = UNTIL;
 		mx = max(mx, tslen + aupad);
 	} else if (cmp < 0) {
@@ -85,43 +85,43 @@ taskwrite(FILE *fp, struct task tsk)
 
 	len = tgpad + mx;
 	for (i = 0; i < len; i++)
-		fputc('-', fp);
-	fputc('\n', fp);
+		fputc('-', stream);
+	fputc('\n', stream);
 
-	fprintf(fp, "Title:       %s\n", tsk.title);
-	for (p = tsk.authors; *p; p++)
-		fprintf(fp, "Author:      %s\n", *p);
+	fprintf(stream, "Title:       %s\n", task.title);
+	for (p = task.authors; *p; p++)
+		fprintf(stream, "Author:      %s\n", *p);
 
 	switch (tt) {
 	case AFTER:
-		fputs("Time Frame:  After ", fp);
-		timewrite(fp, tsk.start);
+		fputs("Time Frame:  After ", stream);
+		timewrite(stream, task.start);
 		break;
 	case FROM_TO:
-		fputs("Time Frame:  From ", fp);
-		timewrite(fp, tsk.start);
-		fputs(" to ", fp);
-		timewrite(fp, tsk.end);
+		fputs("Time Frame:  From ", stream);
+		timewrite(stream, task.start);
+		fputs(" to ", stream);
+		timewrite(stream, task.end);
 		break;
 	case ON:
-		fputs("Time Frame:  On ", fp);
-		timewrite(fp, tsk.start);
+		fputs("Time Frame:  On ", stream);
+		timewrite(stream, task.start);
 		break;
 	case UNTIL:
-		fputs("Time Frame:  Until ", fp);
-		timewrite(fp, tsk.end);
+		fputs("Time Frame:  Until ", stream);
+		timewrite(stream, task.end);
 	}
 
-	fputc('\n', fp);
+	fputc('\n', stream);
 	for (i = 0; i < len; i++)
-		fputc('-', fp);
-	fprintf(fp, "\n\n%s", tsk.body);
+		fputc('-', stream);
+	fprintf(stream, "\n\n%s", task.body);
 
 	return EOK;
 }
 
 int
-taskread(FILE *fp, struct task *tsk)
+taskread(FILE *stream, struct task *task)
 {
 	int err, lineno = 0;
 	bool inhead = true;
@@ -129,22 +129,22 @@ taskread(FILE *fp, struct task *tsk)
 	size_t len = 0;
 	ssize_t nr;
 
-	memset(tsk, 0, sizeof(struct task));
+	memset(task, 0, sizeof(struct task));
 
-	while ((nr = getline(&line, &len, fp)) > 0) {
+	while ((nr = getline(&line, &len, stream)) > 0) {
 		line[nr - 1] = '\0';
 		if (lineno == 0 && !header(line))
 			return EBADMSG;
 		else if (lineno > 0) {
 			if (header(line)) {
-				if (tsk->title == NULL)
+				if (task->title == NULL)
 					return EBADMSG;
 				inhead = false;
 			} else if (!inhead) {
 				if (*line != '\0')
 					return EBADMSG;
 				break;
-			} else if (inhead && (err = parsehead(line, tsk)) != EOK)
+			} else if (inhead && (err = parsehead(line, task)) != EOK)
 				return err;
 		}
 
@@ -154,8 +154,8 @@ taskread(FILE *fp, struct task *tsk)
 	if (nr == -1)
 		return errno;
 
-	while ((nr = getline(&line, &len, fp)) > 0) {
-		if ((err = appendbody(line, nr, tsk)) != EOK)
+	while ((nr = getline(&line, &len, stream)) > 0) {
+		if ((err = appendbody(line, nr, task)) != EOK)
 			return err;
 	}
 
