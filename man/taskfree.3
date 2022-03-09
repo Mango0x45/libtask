@@ -1,0 +1,72 @@
+.\"
+.\" BSD Zero Clause License
+.\"
+.\" Copyright (c) 2022 Thomas Voss
+.\"
+.\" Permission to use, copy, modify, and/or distribute this software for any
+.\" purpose with or without fee is hereby granted.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+.\" OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: March 9 2022 $
+.Dt TASKFREE 3
+.Os
+.Sh NAME
+.Nm taskfree
+.Nd free the contents of a task structure
+.Sh SYNOPSIS
+.In task.h
+.Ft void
+.Fo taskfree
+.Fa "struct task *task"
+.Fc
+.Sh DESCRIPTION
+The
+.Fn taskfree
+function frees the contents of
+.Fa task
+back to the operating system.
+The
+.Fa task
+struct must have been instantiated with data from a previous call to
+.Fn taskread .
+.Sh EXAMPLES
+The following program reads and writes all the tasks specified on the command-line to the standard
+output while storing the data in a single
+.Fa "struct task" .
+The program executes without any memory leaks and performs minimal error checking.
+.Bd -literal -offset indent
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <task.h>
+
+int
+main(int argc, char **argv)
+{
+	FILE *fp;
+	struct task t;
+
+	while (*++argv) {
+		fp = fopen(*argv, "r");
+		taskread(fp, &t);
+		taskwrite(stdout, t);
+		taskfree(&t);
+		fclose(fp);
+	}
+
+	return EXIT_SUCCESS;
+}
+.Ed
+.Sh SEE ALSO
+.Xr taskread 3 ,
+.Xr taskwrite 3 ,
+.Xr task 5
+.Sh AUTHORS
+.An Thomas Voss Aq Mt thomasvoss@live.com
