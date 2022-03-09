@@ -137,6 +137,7 @@ taskread(FILE *stream, struct task *task)
 	int rval = EOK, lineno = 0;
 	bool inhead = true;
 	char *line = NULL;
+	char bodybuf[BUFSIZ + 1] = {0};
 	size_t len = 0;
 	ssize_t nr;
 
@@ -171,12 +172,19 @@ taskread(FILE *stream, struct task *task)
 		goto out;
 	}
 
-	while ((nr = getline(&line, &len, stream)) > 0) {
-		if ((rval = appendbody(line, nr, task)) != EOK)
+	while ((len = fread(bodybuf, sizeof(char), BUFSIZ, stream)) > 0) {
+		bodybuf[len] = '\0';
+		if ((rval = appendbody(bodybuf, len, task)) != EOK)
 			goto out;
+
+		if (len < BUFSIZ) {
+			if (ferror(stream)) {
+				rval = errno;
+				goto out;
+			}
+			break;
+		}
 	}
-	if (nr == -1)
-		rval = errno;
 
 out:
 	free(line);
