@@ -289,6 +289,7 @@ appendbody(char *s, ssize_t len, struct task *tsk)
 	}
 
 	strcat(tsk->body, s);
+	tsk->body_len += len;
 	return EOK;
 }
 
