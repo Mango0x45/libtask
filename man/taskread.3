@@ -1,0 +1,163 @@
+.\"
+.\" BSD Zero Clause License
+.\"
+.\" Copyright (c) 2022 Thomas Voss
+.\"
+.\" Permission to use, copy, modify, and/or distribute this software for any
+.\" purpose with or without fee is hereby granted.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+.\" REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+.\" AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+.\" INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+.\" LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+.\" OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+.\" PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: March 9 2022 $
+.Dt TASKREAD 3
+.Os
+.Sh NAME
+.Nm taskread
+.Nd parse the contents of an input stream into a task structure
+.Sh SYNOPSIS
+.In task.h
+.Ft int
+.Fo taskread
+.Fa "FILE *stream"
+.Fa "struct task *task"
+.Fc
+.Sh DESCRIPTION
+The
+.Fn taskread
+function reads the contents of
+.Fa stream
+and parses them into the structure pointer to by
+.Fa task .
+The contents of the input stream must be in the format specified by the
+.Xr task 5
+manual.
+The
+.Vt "struct task"
+structure is as follows:
+.Pp
+.Bd -literal -offset indent
+struct task {
+	char *title;     /* Task title */
+	char *body;      /* Task body */
+	char **authors;  /* Array of task authors */
+	int author_cnt;  /* Count of task authors */
+	int body_len;    /* Length of body in bytes */
+	struct tm start; /* Task start time */
+	struct tm end;   /* Task end time */
+
+	/* Private fields */
+	int _author_cap; /* Capacity of the `authors' array */
+	int _body_cap;	 /* Capacity of the `body' string */
+};
+.Ed
+.Pp
+The private struct fields contain buffer capacities and are included for internal use by the
+.Fn taskread
+function.
+Code making use of this library should not depend on these fields as they may change in future
+versions.
+The
+.Fa authors
+array is also
+.Dv NULL
+terminated, so it can be iterated over without using the
+.Fa author_cnt
+field.
+The
+.Fa start
+and
+.Fa end
+fields represent the start and end times of the task however as specified by
+.Xr task 5 ,
+only the fields
+.Fa tm_year tm_mon tm_mday tm_hour
+and
+.Fa tm_min
+are used.
+These represent the timestamps year, month, day, hour, and minutes in UTC time respectively.
+.Pp
+The
+.Fa task
+provided is not
+.Dv NULL
+checked, so it is the responsible of the caller to ensure a
+.Dv NULL
+pointer is not passed.
+.Sh RETURN VALUES
+Upon successful completion 0 is returned.
+Otherwise, an error constant specified in
+.Pa errno.h
+is returned.
+.Sh EXAMPLES
+The following program parses all the tasks given as command-line arguments and prints their titles as
+well as the task author(s). Error checking is minimal.
+.Bd -literal -offset indent
+#include <err.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <task.h>
+
+int
+main(int argc, char **argv)
+{
+	int i;
+	FILE *fp;
+	struct task t;
+
+	while (*++argv) {
+		fp = fopen(*argv, "r");
+		switch (taskread(fp, &t)) {
+		case 0:
+			printf("'%s' by ", t.title);
+			for (i = 0; i < t.author_cnt; i++) {
+				fputs(t.authors[i], stdout);
+				if (i < t.author_cnt - 1)
+					fputs(", ", stdout);
+			}
+			putchar('\en');
+			break;
+		case EBADMSG:
+			warnx("improperly formatted file '%s'", *argv);
+			break;
+		default:
+			err(EXIT_FAILURE, "taskread");
+		}
+		taskfree(&t);
+		fclose(fp);
+	}
+
+	return EXIT_SUCCESS;
+}
+.Ed
+.Sh ERRORS
+.Bl -tag -width Er
+.It Bq Er EBADMSG
+The data read from
+.Fa stream
+was in an invalid format.
+.El
+.Pp
+Additionally, any errors returned by the functions
+.Fn calloc ,
+.Fn malloc ,
+.Fn realloc ,
+or
+.Fn getline
+can be returned.
+.Sh SEE ALSO
+.Xr calloc 3 ,
+.Xr getline 3 ,
+.Xr malloc 3 ,
+.Xr realloc 3 ,
+.Xr taskwrite 3 ,
+.Xr task 5
+.Sh AUTHORS
+.An Thomas Voss Aq Mt thomasvoss@live.com
