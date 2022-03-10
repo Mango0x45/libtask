@@ -1,0 +1,53 @@
+#+TITLE: The libtask C library
+
+* Overview
+The ~libtask~ library is a C library for reading and writing *task* files.  The
+specification for these files is included in this repository at ~man/task.5~ but
+can also be found [[https://thomasvoss.com/usr/man/task.5.html][online]].  The library is extremely minimal containing only 3
+user-facing functions, and documentation for all of them.
+
+* Building && Installation
+To build the library, simply navigate to the ~src/~ directory and run ~make~.  This
+will generate both ~libtask.so~ and ~libtask.a~ so that you can both use the library
+statically or dynamically.  If you would like to install the library, simply
+build the library and then run ~make install~.  Running ~make install~ from the root
+of the project will additionally install the manual pages.
+
+* API Reference
+*NOTE*: All functions listed here contain more extensive documentation in the form
+of manual pages.  All of these can be found in this repository under ~man/*.3~ and
+can be installed locally on your system by running ~make install~.  Alternatively,
+these can also be found online at ~https://thomasvoss.com/usr/man/<FUNC>.3.html~.
+Replace ~<FUNC>~ with the function name of course.
+
+** ~taskread(3)~
+#+BEGIN_SRC C
+  int taskread(FILE *stream, struct task *task);
+#+END_SRC
+
+Read properly formatted task input from ~stream~ and store the parsed data into
+the struct pointed to by ~task~.
+
+** ~taskwrite(3)~
+#+BEGIN_SRC C
+  int taskwrite(FILE *stream, struct task task);
+#+END_SRC
+
+Write the contents of the struct ~task~ to the output stream ~stream~ as a properly
+formatted task.
+
+** ~taskfree(3)~
+#+BEGIN_SRC C
+  void taskfree(struct task task);
+#+END_SRC
+
+Free the contents of ~task~ back to the operating system assuming that it has been
+instantiated by a call to ~taskread()~.
+
+* Contributing
+While the library is mostly complete, contributions are always welcome.  These
+can come either in the form of a GitHub pull request, an email containing your
+patch, or a port to another language (it would be cool to see other people using
+this format).  If you would like to send a patch via email (such as if you are
+using ~git send-email~) then check the "Contribute" section at the bottom of the
+git repository at [[https://git.thomasvoss.com]].
