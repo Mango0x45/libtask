@@ -49,20 +49,20 @@ static size_t max(size_t a, size_t b);
 void
 taskfree(struct task *task)
 {
-	char **p;
+	int i;
+
 	free(task->title);
 	free(task->body);
-	for (p = task->authors; *p; p++)
-		free(*p);
+	for (i = 0; i < task->author_cnt; i++)
+		free(task->authors[i]);
 	free(task->authors);
 }
 
 int
 taskwrite(FILE *stream, struct task task)
 {
-	int cmp;
-	char **p;
-	size_t i, len, mx = 0;
+	int i, cmp;
+	size_t j, len, mx = 0;
 	const int tgpad = 13; /* strlen("Time Frame:  ")              */
 	const int ftpad = 9;  /* strlen("From  to ")                  */
 	const int aupad = 6;  /* strlen("After ") || strlen("Until ") */
@@ -76,8 +76,8 @@ taskwrite(FILE *stream, struct task task)
 	} tt;
 
 	mx = strlen(task.title);
-	for (p = task.authors; *p; p++)
-		mx = max(mx, strlen(*p));
+	for (i = 0; i < task.author_cnt; i++)
+		mx = max(mx, strlen(task.authors[i]));
 
 	if ((cmp = timecmp(task.start, task.end)) == 0) {
 		tt = ON;
@@ -95,13 +95,13 @@ taskwrite(FILE *stream, struct task task)
 		return EINVAL;
 
 	len = tgpad + mx;
-	for (i = 0; i < len; i++)
+	for (j = 0; j < len; j++)
 		fputc('-', stream);
 	fputc('\n', stream);
 
 	fprintf(stream, "Title:       %s\n", task.title);
-	for (p = task.authors; *p; p++)
-		fprintf(stream, "Author:      %s\n", *p);
+	for (i = 0; i < task.author_cnt; i++)
+		fprintf(stream, "Author:      %s\n", task.authors[i]);
 
 	switch (tt) {
 	case AFTER:
@@ -124,9 +124,12 @@ taskwrite(FILE *stream, struct task task)
 	}
 
 	fputc('\n', stream);
-	for (i = 0; i < len; i++)
+	for (j = 0; j < len; j++)
 		fputc('-', stream);
-	fprintf(stream, "\n\n%s", task.body);
+	if (task.body != NULL)
+		fprintf(stream, "\n\n%s", task.body);
+	else
+		fputc('\n', stream);
 
 	return EOK;
 }
@@ -135,7 +138,7 @@ int
 taskread(FILE *stream, struct task *task)
 {
 	int rval = EOK, lineno = 0;
-	bool inhead = true;
+	bool hasbody = false, inhead = true;
 	char *line = NULL;
 	char bodybuf[BUFSIZ + 1] = {0};
 	size_t len = 0;
@@ -150,7 +153,8 @@ taskread(FILE *stream, struct task *task)
 			goto out;
 		} else if (lineno > 0) {
 			if (header(line)) {
-				if (task->title == NULL) {
+				if (task->title == NULL
+						|| (timenull(task->start) && timenull(task->end))) {
 					rval = EBADMSG;
 					goto out;
 				}
@@ -160,6 +164,7 @@ taskread(FILE *stream, struct task *task)
 					rval = EBADMSG;
 					goto out;
 				}
+				hasbody = true;
 				break;
 			} else if (inhead && (rval = parsehead(line, task)) != EOK)
 				goto out;
@@ -186,6 +191,8 @@ taskread(FILE *stream, struct task *task)
 		}
 	}
 
+	if (hasbody && task->body == NULL)
+		rval = EBADMSG;
 out:
 	free(line);
 	return rval;
