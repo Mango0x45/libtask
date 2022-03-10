@@ -14,7 +14,7 @@
 .\" OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 .\" PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: March 9 2022 $
+.Dd $Mdocdate: March 10 2022 $
 .Dt TASKFREE 3
 .Os
 .Sh NAME
@@ -24,7 +24,7 @@
 .In task.h
 .Ft void
 .Fo taskfree
-.Fa "struct task *task"
+.Fa "struct task task"
 .Fc
 .Sh DESCRIPTION
 The
@@ -57,7 +57,7 @@ main(int argc, char **argv)
 		fp = fopen(*argv, "r");
 		taskread(fp, &t);
 		taskwrite(stdout, t);
-		taskfree(&t);
+		taskfree(t);
 		fclose(fp);
 	}
 

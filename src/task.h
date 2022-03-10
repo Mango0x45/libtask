@@ -29,7 +29,7 @@ struct task {
 	struct tm start, end;
 };
 
-void taskfree(struct task *task);
+void taskfree(struct task task);
 int taskwrite(FILE *stream, struct task task);
 int taskread(FILE *stream, struct task *task);
 

@@ -47,15 +47,15 @@ static void timewrite(FILE *fp, struct tm t);
 static size_t max(size_t a, size_t b);
 
 void
-taskfree(struct task *task)
+taskfree(struct task task)
 {
 	int i;
 
-	free(task->title);
-	free(task->body);
-	for (i = 0; i < task->author_cnt; i++)
-		free(task->authors[i]);
-	free(task->authors);
+	free(task.title);
+	free(task.body);
+	for (i = 0; i < task.author_cnt; i++)
+		free(task.authors[i]);
+	free(task.authors);
 }
 
 int
