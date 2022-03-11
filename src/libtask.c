@@ -222,7 +222,8 @@ parsetitle(char *s, struct task *tsk)
 	size_t len;
 
 	SKPSPC(s);
-	len = strlen(s);
+	if ((len = strlen(s)) == 0)
+		return EBADMSG;
 	if ((tsk->title = malloc(sizeof(char) * len + 1)) == NULL)
 		return errno;
 	strcpy(tsk->title, s);
@@ -253,7 +254,8 @@ parseauthor(char *s, struct task *tsk)
 	}
 	*p2 = '\0';
 
-	len = strlen(s);
+	if ((len = strlen(s)) == 0)
+		return EBADMSG;
 
 	if (tsk->authors == NULL) {
 		if ((tsk->authors = malloc(sizeof(char *) * 2)) == NULL)
