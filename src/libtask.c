@@ -251,6 +251,7 @@ parseauthor(char *s, struct task *tsk)
 			inspc = false;
 		*p2++ = *p1++;
 	}
+	*p2 = '\0';
 
 	len = strlen(s);
 
