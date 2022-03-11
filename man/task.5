@@ -14,7 +14,7 @@
 .\" OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 .\" PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: March 9 2022 $
+.Dd $Mdocdate: March 11 2022 $
 .Dt TASK 5
 .Os
 .Sh NAME
@@ -66,6 +66,32 @@ The field names are case sensitive, so having the line
 is a violation of the format, but
 .Dq Author: Thomas Voss
 is completely valid.
+Additionally whitespace in
+.Dq author
+fields is always collapsed into a single space character
+.Pq Sq " " .
+This means that the authors
+.Sm off
+.Do
+.Pf Thomas Aq space
+.Aq space
+Voss
+.Dc
+.Sm on
+and
+.Sm off
+.Do
+.Pf Thomas Aq tab
+Voss
+.Dc
+.Sm on
+should be treated as if they are
+.Sm off
+.Do
+.Pf Thomas Aq space
+Voss
+.Dc .
+.Sm on
 .Pp
 The formats of the data given to the
 .Dq Title
@@ -137,5 +163,11 @@ to the server.
 .Xr taskfree 3 ,
 .Xr taskread 3 ,
 .Xr taskwrite 3
+.Sh HISTORY
+In the original edition of the manual
+.Pq 9th of March, 2022
+the standard did not specify that whitespace had to be squashed in author names, although the libtask
+library was already doing so.
+This behavior was standardized on the 11th of March, 2022.
 .Sh AUTHORS
 .An Thomas Voss Aq Mt thomasvoss@live.com
